@@ -7,7 +7,7 @@ Rnd.PutSeed(int(now))
 
 #dimensions: n = 2^18, e = 2^16 ??
 #todo, fiddle with numbers, commonly see a:b = a:c = 3:1 approx
-Graph = snap.GenRMat(1000, 100, .5, .17, .17, Rnd) 
+Graph = snap.GenRMat(10, 1, .5, .17, .17, Rnd) 
 snap.PrintInfo(Graph, "RMat Graph", "graph_info.txt", False)
 
 # save as binary file, not useful for me

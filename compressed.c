@@ -5,10 +5,9 @@
 
 // See output file of rmat.py for assumed input format
 
-
-
-void csr(cs_matrix_t *m, const char *file, int n) {
-	m->column = 0;
+void cs(cs_matrix_t *m, const char *file, int n, char column) {
+	m->column = column;
+	m->n = n;
 
 	FILE *fp = fopen(file, "r");
 	int bufc, bufr;
@@ -18,7 +17,10 @@ void csr(cs_matrix_t *m, const char *file, int n) {
 	m->IR = (int *) malloc(sizeof(int) * size);
 	m->NUM = (int *) malloc(sizeof(int) * size);
 
-	srand(time(0));
+	srand(1);
+	//srand(time(0));
+
+	int nzc = 0;
 
 	int i = 0;
 	int current_index = 0;
@@ -31,9 +33,9 @@ void csr(cs_matrix_t *m, const char *file, int n) {
 		}
 
 		m->JC[i] = current_index;
+		nzc++;
 		while(!feof(fp) && i == bufc) {
 			fscanf(fp, "%d", &bufr);
-			//TODO: check if current_index is out of bounds of array
 			m->IR[current_index] = bufr;
 			m->NUM[current_index] = rand() % 100; 
 			current_index++;
@@ -53,15 +55,40 @@ void csr(cs_matrix_t *m, const char *file, int n) {
 		i++;
 	}
 
+	m->nnz = current_index;
+	m->nzc = nzc;
+
 	fclose(fp);
 	return;
 }
 
-void csc(cs_matrix_t *m, const char *file, int n) {
-	m->column = 1;
-	//use realloc for resize of the IR and NUM arrays
-	//JC array is always size n
-	//optionally fill in the NUM with randomized numbers (between 1 and 10 maybe?)
+void dcs(cs_matrix_t *m, dcs_matrix_t *d) {
+	d->column = m->column;
+	d->IR = m->IR;
+	d->NUM = m->NUM;
+
+	d->n = m->n;
+	d->nnz = m->nnz;
+	d->nzc = m->nzc;
+
+	d->JC = (int *) malloc(sizeof(int) * m->nzc);
+	d->CP = (int *) malloc(sizeof(int) * (m->nzc +1));
+
+	int current_index = 0;
+	for(int i = 0; i < m->n; i++) {
+		if(m->JC[i] == m->JC[i+1]) {
+			continue;
+		}
+		else {
+			d->JC[current_index] = i;
+			d->CP[current_index] = m->JC[i];
+			current_index++;
+		}
+	}
+	d->CP[current_index] = m->nnz;
+
+	//invalidate m
+	free(m->JC);
 
 	return;
 }

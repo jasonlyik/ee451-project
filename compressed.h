@@ -14,6 +14,7 @@ typedef struct {
 	int *IR;
 	int *NUM;
 
+	int n;   // number of columns
 	int nzc; // non zero columns/rows
 	int nnz; // number of nonzeroes
 } cs_matrix_t;
@@ -25,30 +26,19 @@ typedef struct {
 	int *IR;
 	int *NUM;
 
+	int n;
 	int nzc; // non zero columns/rows
 	int nnz; // number of nonzeroes
 } dcs_matrix_t;
 
 /*
- * Read edges from file into CSR format in m
+ * Read edges from file into singly compressed format
  * 
  */
-void csr(cs_matrix_t *m, const char *file, int n);
+void cs(cs_matrix_t *m, const char *file, int nonzeroes, char column);
 
 /*
- * Read edges from file into CSC format in m
+ * Convert compressed matrix into doubly compressed matrix
  * 
  */
-void csc(cs_matrix_t *m, const char *file, int nonzeroes);
-
-/*
- * Convert CSR matrix into DCSR
- * 
- */
-void dcsr(cs_matrix_t *m, dcs_matrix_t *d);
-
-/*
- * Convert CSC matrix into DCSC
- * 
- */
-void dcsc(cs_matrix_t *m, dcs_matrix_t *d);
+void dcs(cs_matrix_t *m, dcs_matrix_t *d);

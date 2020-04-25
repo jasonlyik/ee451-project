@@ -11,8 +11,8 @@ int main(int argc, char **argv) {
 	}
 	int n = atoi(argv[1]);
 	int nnz = atoi(argv[2]);
-	csr(&m, "graph.txt", n);
-
+	cs(&m, "graph.txt", n, 1);
+	
 	cout << endl << "JC: ";
 	for(int i = 0; i < n+1; i++) {
 		cout << m.JC[i] << " ";
