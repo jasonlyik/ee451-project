@@ -1,5 +1,5 @@
 #include <iostream>
-#include "single_compressed.h"
+#include "compressed.h"
 
 using namespace std;
 

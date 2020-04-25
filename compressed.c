@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include "single_compressed.h"
+#include "compressed.h"
 
 // See output file of rmat.py for assumed input format
 
