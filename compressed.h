@@ -26,7 +26,7 @@ typedef struct {
 	int *IR;
 	int *NUM;
 
-	int n;
+	int n;   // number of columns
 	int nzc; // non zero columns/rows
 	int nnz; // number of nonzeroes
 } dcs_matrix_t;
@@ -35,7 +35,7 @@ typedef struct {
  * Read edges from file into singly compressed format
  * 
  */
-void cs(cs_matrix_t *m, const char *file, int nonzeroes, char column);
+void cs(cs_matrix_t *m, const char *file, int nonzeroes, char column, int random_seed);
 
 /*
  * Convert compressed matrix into doubly compressed matrix

@@ -5,7 +5,7 @@
 
 // See output file of rmat.py for assumed input format
 
-void cs(cs_matrix_t *m, const char *file, int n, char column) {
+void cs(cs_matrix_t *m, const char *file, int n, char column, int random_seed) {
 	m->column = column;
 	m->n = n;
 

@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	int n = atoi(argv[1]);
-	cs(&m, "graph.txt", n, 1);
+	cs(&m, "graph.txt", n, 1, 1);
 
 	dcs_matrix_t d;
 	dcs(&m, &d);
