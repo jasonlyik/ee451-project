@@ -1,4 +1,4 @@
-#Erdos Renyi Graphs
+# Erdos Renyi Graphs
 
 Graphs with random distribution of edges
 
