@@ -2,7 +2,7 @@
 
 Created using RMAT graph generator
 
-TODO: based on the trials with Erdos-Renyi graphs, pick a standard n and nnz and test on differently distributed graphs
+TODO: based on the trials with Erdos-Renyi graphs, pick a standard n and nnz and test on differently distributed graphs, test parallel implementation vs itself on different distributions
 
 + a = 0.25, b = 0.25, c = 0.25, d = 0.25 (Erdos-Renyi)
 
