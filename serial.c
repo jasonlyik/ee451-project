@@ -41,8 +41,6 @@ void dcsc_multiply(int **C, int n, char *Afile, char *Bfile, int Arseed, int Brs
 	dcs(&m2, &B);	
 	
 	//multiplication
-	//TODO here
-	//TODO test this in a different file with small matrices
 	for(int x = 0; x < B.nzc; x++) {
 		int j = B.JC[x]; // column of C
 		int curr = B.CP[x];
@@ -205,13 +203,16 @@ int main(int argc, char **argv) {
 
 		//check that C is correct here
 		if(it == 0) {
+			char correct = 1;
 			for(int i = 0; i < n; i++) {
 				for(int j = 0; j < n; j++) {
 					if(C1[i][j] != C2[i][j]) {
+						correct = 0;
 						printf("Output Matrices differ at [%d][%d]\n", i, j);
 					}
 				}
 			}
+			if(correct) printf("Output Matrices do not differ\n");
 		}
 
 	}

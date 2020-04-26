@@ -41,8 +41,6 @@ void dcsc_multiply(int **C, int n, char *Afile, char *Bfile, int Arseed, int Brs
 	dcs(&m2, &B);	
 	
 	//multiplication
-	//TODO here
-	//TODO test this in a different file with small matrices
 	for(int x = 0; x < B.nzc; x++) {
 		int j = B.JC[x]; // column of C
 		int curr = B.CP[x];
