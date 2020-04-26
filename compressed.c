@@ -17,7 +17,7 @@ void cs(cs_matrix_t *m, const char *file, int n, char column, int random_seed) {
 	m->IR = (int *) malloc(sizeof(int) * size);
 	m->NUM = (int *) malloc(sizeof(int) * size);
 
-	srand(1);
+	srand(random_seed);
 	//srand(time(0));
 
 	int nzc = 0;
@@ -40,8 +40,8 @@ void cs(cs_matrix_t *m, const char *file, int n, char column, int random_seed) {
 			m->NUM[current_index] = rand() % 100; 
 			current_index++;
 			if(current_index == size) {
-				m->IR = (int *)realloc(m->IR, 2*size);
-				m->NUM = (int *)realloc(m->NUM, 2*size);
+				m->IR = (int *)realloc(m->IR, sizeof(int) * (2*size));
+				m->NUM = (int *)realloc(m->NUM, sizeof(int) * (2*size));
 				size = 2*size;
 			}
 			fscanf(fp, "%d", &bufc);
