@@ -1,4 +1,4 @@
-#Graphs With Varying Distributions
+# Graphs With Varying Distributions
 
 Created using RMAT graph generator
 
