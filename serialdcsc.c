@@ -88,20 +88,22 @@ void dcsc_multiply(int **C, int n, char *Afile, char *Bfile, int Arseed, int Brs
 }
 
 int main(int argc, char **argv) {
-	if(argc < 6) {
-		printf("arguments: n Afile Arseed Bfile Brseed\n");
+	if(argc < 3) {
+		printf("arguments: n nnz\n");
 		return 1;
 	}
 	
 	int n = atoi(argv[1]);
-	int Arseed = atoi(argv[3]);
-	int Brseed = atoi(argv[5]);
+	int nnz = atoi(argv[2]);
 	int num_iterations = 5;
 
 	int **C1 = (int **) malloc (sizeof(int *)*n);
 	for (int i=0; i<n; i++) {
 		C1[i] = (int *) malloc(sizeof(int)*n);
 	}
+
+	char Afile[20];
+	char Bfile[20];
 
 	//number of iterations of the program
 	for(int it = 0; it < num_iterations; it++) {
@@ -112,19 +114,11 @@ int main(int argc, char **argv) {
 			}
 		}
 
+		sprintf(Afile, "%d_%d_%d", n, nnz, it);
+		sprintf(Bfile, "%d_%d_%d", n, nnz, (it+1) % num_iterations);
+
 		//execute multiplications
-		dcsc_multiply(C1, n, argv[2], argv[4], Arseed, Brseed);
-
-		//check that C is correct here
-		if(it == 0) {
-			for(int i = 0; i < n; i++) {
-				for(int j = 0; j < n; j++) {
-					printf("%d ", C1[i][j]); 
-				}
-				printf("\n");
-			}
-		}
-
+		dcsc_multiply(C1, n, Afile, Bfile, 1, 1);
 	}
 	
 
