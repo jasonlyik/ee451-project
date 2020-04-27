@@ -22,6 +22,29 @@
 #define BLOCK_WIDTH 16
 #define BLOCK_HEIGHT 32
 
+typedef struct {
+	char column;
+	int *JC;
+	int *IR;
+	int *NUM;
+
+	int n;   // number of columns
+	int nzc; // non zero columns/rows
+	int nnz; // number of nonzeroes
+} cs_matrix_t;
+
+typedef struct {
+	char column;
+	int *JC;
+	int *CP;
+	int *IR;
+	int *NUM;
+
+	int n;   // number of columns
+	int nzc; // non zero columns/rows
+	int nnz; // number of nonzeroes
+} dcs_matrix_t;
+
 //TODO: delete this
 void read_matrix(int **m, char *file, int seed) {
 	FILE *fp = fopen(file, "r");
@@ -209,7 +232,14 @@ __device__ int binary_search(int *arr, int len, int target) {
 
 __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int n) {
 	//TODO: write this
-	
+	//get the block, thread col and thread row
+	//figure out relevant portions of B.JC, B.CP, etc.
+	//setup shared memory --> while loop for each thread, once all threads break they can sync
+	//for loop for the columns that this will look at
+		//for loop for the nonzero elements that this thread will execute on
+			//do the multiplication, remember to atomicAdd for C
+	//note: threads don't have to wait for each other to sync, some can be on different columns than others no problem
+
 }
 
 void parallel_multiply(int *C, int n, int nnz, char *Afile, char *Bfile, int Arseed, int Brseed) {
