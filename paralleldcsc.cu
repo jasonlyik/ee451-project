@@ -233,17 +233,16 @@ __device__ int binary_search(int *arr, int len, int target) {
 }
 
 __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_cols_per_block, int n) {
-	//figure out relevant portions of B.JC, B.CP, etc.
 	int block_first = gridIdx.x * num_cols_per_block;
-	if(start > B.nzc) return; //more blocks than nzc
-	int block_last = block_first + num_cols_per_block - 1; //inclusive
-	if(block_last >= B.nzc) block_last = B.nzc - 1;
+	if(block_first > B.nzc) return; // more blocks than nzc
+	int block_last = block_first + num_cols_per_block; //exclusive
+	if(block_last > B.nzc) block_last = B.nzc;
 
 	//TODO: setup shared memory --> while loop for each thread, once all threads break they can sync
 
 	//loop for the columns that this will look at
-	int x = block_first + threadIdx.x; // col index in B.JC this thread col is working on
-	while(x <= block_last) {
+	int x = block_first + threadIdx.x; // index in B.JC this thread col is working on
+	while(x < block_last) {
 		int j = B.JC[x];
 		int first = B.CP[x];
 		int last = B.CP[x+1];
@@ -271,7 +270,7 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 				}
 			}
 
-			curr += blockDim.y;
+			curr += blockDim.y; // next non-zero assigned round robin
 		}
 		
 		x += blockDim.x; // next column is assigned round robin
