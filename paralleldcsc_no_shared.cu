@@ -233,7 +233,7 @@ __device__ int binary_search(int *arr, int len, int target) {
 }
 
 __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_cols_per_block, int n) {
-	int block_first = gridIdx.x * num_cols_per_block;
+	int block_first = blockIdx.x * num_cols_per_block;
 	if(block_first > B.nzc) return; // more blocks than nzc
 	int block_last = block_first + num_cols_per_block; //exclusive
 	if(block_last > B.nzc) block_last = B.nzc;
