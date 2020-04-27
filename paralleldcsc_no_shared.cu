@@ -257,10 +257,12 @@ int main(int argc, char **argv) {
 	int nnz = atoi(argv[2]);
 	int num_iterations = 5;
 
-	int *C;
+	int *C = (int *) malloc (sizeof(int)*n*n);
+	int *gpu_C;
+	cudaMalloc((void**)&gpu_C, sizeof(int)*n*n);
+
 	char Afile[20];
 	char Bfile[20];
-	cudaMallocManaged(&C, sizeof(int)*n*n);
 
 	//number of iterations of the program
 	for(int it = 0; it < num_iterations; it++) {
@@ -268,21 +270,21 @@ int main(int argc, char **argv) {
 		for(int i = 0; i < n*n; i++) {
 			C[i] = 0;
 		}
+		cudaMemcpy(gpu_C, C, sizeof(int)*n*n, cudaMemcpyHostToDevice);
 
 		sprintf(Afile, "%d_%d_%d", n, nnz, it);
 		sprintf(Bfile, "%d_%d_%d", n, nnz, (it+1) % num_iterations);
 
 		//execute multiplication
-		parallel_multiply(C, n, nnz, Afile, Bfile, 1, 1);
+		parallel_multiply(gpu_C, n, nnz, Afile, Bfile, 1, 1);
 
 		//verify that C is correct here - deleted for sake of execution time
-	}
 
-	//TODO: since submitting CUDA takes so long on HPC, probabaly want to write batch
-	// or run all of the tests in the same executable sequence, make changes after the
-	// algorithm is shown to work
+		
+	}
 	
-	cudaFree(C);
+	cudaFree(gpu_C);
+	free(C);
 
 	return 0;
 }
