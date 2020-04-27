@@ -245,6 +245,7 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int n) {
 void parallel_multiply(int *C, int n, int nnz, char *Afile, char *Bfile, int Arseed, int Brseed) {
 	//start timer
 	struct timespec start, computation_done;
+	double time
 	if( clock_gettime(CLOCK_REALTIME, &start) == -1) { perror("clock gettime");}
 
 	//setup
@@ -294,6 +295,9 @@ int main(int argc, char **argv) {
 	int nnz = atoi(argv[2]);
 	int num_iterations = 5;
 
+	int *C;
+	char Afile[20];
+	char Bfile[20];
 	cudaMallocManaged(&C, sizeof(int)*n*n);
 
 	//number of iterations of the program
