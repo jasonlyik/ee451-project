@@ -1,4 +1,10 @@
-# Template for creating graphs
+#
+# Jason Yik
+# jyik@usc.edu
+# EE451 Final Project
+#
+# Generation of randomized edges for graph
+#
 
 import sys
 import snap

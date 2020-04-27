@@ -1,3 +1,18 @@
+/* 
+ * 
+ * Jason Yik
+ * jyik@usc.edu
+ * EE451 Final Project
+ *
+ * CUDA implementation of DCSC matrix multiplication.
+ * 
+ * Run on USC HPC:
+ * srun -n1 --gres=gpu:1 ./parallel <n> <nnz>
+ *
+ * Run with executable in a graphs folder containing n_nnz_x graphs
+ *
+ */ 
+
 #include "compressed.h"
 
 #include <stdio.h>

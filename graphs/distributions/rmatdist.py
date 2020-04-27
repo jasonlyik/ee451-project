@@ -1,3 +1,11 @@
+#
+# Jason Yik
+# jyik@usc.edu
+# EE451 Final Project
+#
+# Generation of randomized edges with different distributions for graph
+#
+
 # TODO: fix n and nnz, make arguments be probabilities a b c
 
 import sys

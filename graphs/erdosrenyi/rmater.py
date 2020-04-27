@@ -1,3 +1,11 @@
+#
+# Jason Yik
+# jyik@usc.edu
+# EE451 Final Project
+#
+# Generation of Erdos-Renyi graphs
+#
+
 import sys
 import snap
 import time

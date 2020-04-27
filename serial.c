@@ -1,3 +1,13 @@
+/* 
+ * 
+ * Jason Yik
+ * jyik@usc.edu
+ * EE451 Final Project
+ *
+ * Serial execution of DCSC multiplication and block matrix multiplication.
+ *
+ */ 
+
 #include "compressed.h"
 
 #include <stdio.h>

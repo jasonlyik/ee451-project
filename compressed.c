@@ -1,3 +1,13 @@
+/* 
+ * 
+ * Jason Yik
+ * jyik@usc.edu
+ * EE451 Final Project
+ *
+ * Generation of compressed data structures for matrices. 
+ *
+ */ 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>

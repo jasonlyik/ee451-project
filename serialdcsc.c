@@ -1,3 +1,16 @@
+/* 
+ * 
+ * Jason Yik
+ * jyik@usc.edu
+ * EE451 Final Project
+ *
+ * Serial multiplication of DCSC matrices.
+ * 
+ * Compile and move executable into graphs folder, 
+ * run with arguments n and nnz for graphs that exist
+ *
+ */ 
+
 #include "compressed.h"
 
 #include <stdio.h>

@@ -1,3 +1,13 @@
+/* 
+ * 
+ * Jason Yik
+ * jyik@usc.edu
+ * EE451 Final Project
+ *
+ * Testing Correctness for DCSC data structure
+ *
+ */ 
+
 #include <iostream>
 #include "compressed.h"
 
