@@ -303,7 +303,7 @@ int main(int argc, char **argv) {
 	//number of iterations of the program
 	for(int it = 0; it < num_iterations; it++) {
 		//initialize C
-		for(int i = 0; i < n^2; i++) {
+		for(int i = 0; i < n*n; i++) {
 			C[i] = 0;
 		}
 
@@ -333,18 +333,31 @@ int main(int argc, char **argv) {
 					if(C[i*n + j] != C2[i][j]) {
 						correct = 0;
 						printf("Output Matrices differ at [%d][%d]\n", i, j);
+						break;
 					}
 				}
+				if(!correct) break;
 			}
-			if(correct) printf("Output Matrices do not differ\n");
 
 			for (int i=0; i<n; i++) {
 				free(C2[i]);
 			}
 			free(C2);
+
+			if(correct) {
+				printf("Output Matrices do not differ\n");
+			}
+			else {
+				printf("Incorrect Multiplication, stopping\n");
+				break;
+			}
 		}
 
 	}
+
+	//TODO: since submitting CUDA takes so long on HPC, probabaly want to write batch
+	// or run all of the tests in the same executable sequence, make changes after the
+	// algorithm is shown to work
 	
 	cudaFree(C);
 
