@@ -208,12 +208,13 @@ __device__ int binary_search(int *arr, int len, int target) {
 }
 
 __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int n) {
-
+	//TODO: write this
+	
 }
 
 void parallel_multiply(int *C, int n, int nnz, char *Afile, char *Bfile, int Arseed, int Brseed) {
 	//start timer
-	struct timespec start, computation_start, computation_done;
+	struct timespec start, computation_done;
 	if( clock_gettime(CLOCK_REALTIME, &start) == -1) { perror("clock gettime");}
 
 	//setup
@@ -231,9 +232,6 @@ void parallel_multiply(int *C, int n, int nnz, char *Afile, char *Bfile, int Ars
 	dim3 dimGrid(GRID_WIDTH);
 	dim3 dimBlock(BLOCK_WIDTH, BLOCK_HEIGHT);
 
-	//start timer for computation
-	if( clock_gettime(CLOCK_REALTIME, &computation_start) == -1) { perror("clock gettime");}
-
 	device_multiply<<<dimGrid, dimBlock>>>(A, B, C, n);
 	cudaDeviceSynchronize(); // in order to access unified memory
 
@@ -241,9 +239,8 @@ void parallel_multiply(int *C, int n, int nnz, char *Afile, char *Bfile, int Ars
 	if( clock_gettime(CLOCK_REALTIME, &computation_done) == -1) { perror("clock gettime");}
 
 	//print out time for finishing computation and copying back data
-	time1 = (computation_done.tv_sec - computation_start.tv_sec)+ (double)(computation_done.tv_nsec - computation_start.tv_nsec)/1e9;
-	time2 = (computation_done.tv_sec - start.tv_sec)+ (double)(computation_done.tv_nsec - start.tv_nsec)/1e9;
-	printf("DCSC A nnz: %d, A nzc: %d, B nnz: %d, B nzc: %d\nComputation time: %f\nTotal time: %f\n", A.nnz, A.nzc, B.nnz, B.nzc, time1, time2);
+	time = (computation_done.tv_sec - start.tv_sec)+ (double)(computation_done.tv_nsec - start.tv_nsec)/1e9;
+	printf("DCSC A nnz: %d, A nzc: %d, B nnz: %d, B nzc: %d\nExecution Time: %f\n", A.nnz, A.nzc, B.nnz, B.nzc, time);
 
 	//free unified memory
 	cudaFree(A.JC);
