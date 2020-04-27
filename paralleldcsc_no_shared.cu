@@ -5,6 +5,7 @@
  * EE451 Final Project
  *
  * CUDA implementation of DCSC matrix multiplication.
+ * Implementation without shared memory.
  * 
  * Run on USC HPC:
  * srun -n1 --gres=gpu:1 ./parallel <n> <nnz>
@@ -22,7 +23,7 @@
 #define BLOCK_WIDTH 16
 #define BLOCK_HEIGHT 32
 
-//TODO: possibly increase block width, decrease block height since there will be max 32 nonzeroes per col on avg
+//TODO: possibly increase block width, decrease block height since there will be max 8 nonzeroes per col on avg
 
 typedef struct {
 	char column;
@@ -46,85 +47,6 @@ typedef struct {
 	int nzc; // non zero columns/rows
 	int nnz; // number of nonzeroes
 } dcs_matrix_t;
-
-//TODO: delete this
-void read_matrix(int **m, char *file, int seed) {
-	FILE *fp = fopen(file, "r");
-
-	int bufc, bufr;
-	srand(seed);
-
-	fscanf(fp, "%d", &bufc);
-	while(!feof(fp)) {
-		fscanf(fp, "%d", &bufr);
-		m[bufr][bufc] = rand() % 100;
-		fscanf(fp, "%d", &bufc);
-	}
-
-	fclose(fp);
-	return;
-}
-
-//TODO: delete this
-void serial_multiply(int **C, int n, char *Afile, char *Bfile, int Arseed, int Brseed) {
-	//O(n^3) block multiplication from pa1
-	struct timespec start, stop;
-	if( clock_gettime(CLOCK_REALTIME, &start) == -1) { perror("clock gettime");}
-
-	//read graph into matrices
-	int **A = (int **) malloc (sizeof(int *)*n);
-	int **B = (int **) malloc (sizeof(int *)*n);
-	for (int i=0; i<n; i++) {
-		A[i] = (int *) malloc(sizeof(int)*n);
-		B[i] = (int *) malloc(sizeof(int)*n);
-	}
-
-	for(int i = 0; i < n; i++) {
-		for(int j = 0; j < n; j++) {
-			A[i][j] = 0;
-			B[i][j] = 0;
-		}
-	}
-
-	read_matrix(A, Afile, Arseed);
-	read_matrix(B, Bfile, Brseed);
-
-	int b = 16;
-	int m = n / b;
-	int i, j;
-	int k, u, v, w;
-	for(i = 0; i < m; i++) {
-		for(j = 0; j < m; j++) {
-			//iterate over every block in A's row, B's column
-			for(k = 0; k < m; k++) {
-				//multiply A block by B block
-				for(u = 0; u < b; u++) {
-					for(v = 0; v < b; v++) {
-						for(w = 0; w < b; w++) {
-							//C(i, j)(u, v) += A(i, k)(u, w) * B(k, j)(w, v)
-							C[i*b + u][j*b + v] = C[i*b + u][j*b + v] + A[i*b + u][k*b + w] * B[k*b + w][j*b + v];
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if( clock_gettime( CLOCK_REALTIME, &stop) == -1 ) { perror("clock gettime");}	
-
-	//print time
-	double time = (stop.tv_sec - start.tv_sec)+ (double)(stop.tv_nsec - start.tv_nsec)/1e9;
-	printf("Serial Block Multiplication\nExecution time: %f\n", time);
-
-	for (i=0; i<n; i++) {
-		free(A[i]);
-		free(B[i]);
-	}
-	free(A);
-	free(B);
-
-	return;
-}
 
 //uses CUDA unified memory
 void cuda_cs(cs_matrix_t *m, const char *file, int n, int nnz, char column, int random_seed) {
@@ -353,46 +275,7 @@ int main(int argc, char **argv) {
 		//execute multiplication
 		parallel_multiply(C, n, nnz, Afile, Bfile, 1, 1);
 
-		//verify that C is correct here
-		//TODO: get rid of this
-		if(it == 0) {
-			int **C2 = (int **) malloc (sizeof(int *)*n);
-			for (int i=0; i<n; i++) {
-				C2[i] = (int *) malloc(sizeof(int)*n);
-			}
-			for(int i = 0; i < n; i++) {
-				for(int j = 0; j < n; j++) {
-					C2[i][j] = 0;
-				}
-			}
-			serial_multiply(C2, n, Afile, Bfile, 1, 1);
-
-			char correct = 1;
-			for(int i = 0; i < n; i++) {
-				for(int j = 0; j < n; j++) {
-					if(C[i*n + j] != C2[i][j]) {
-						correct = 0;
-						printf("Output Matrices differ at [%d][%d]\n", i, j);
-						break;
-					}
-				}
-				if(!correct) break;
-			}
-
-			for (int i=0; i<n; i++) {
-				free(C2[i]);
-			}
-			free(C2);
-
-			if(correct) {
-				printf("Output Matrices do not differ\n");
-			}
-			else {
-				printf("Incorrect Multiplication, stopping\n");
-				break;
-			}
-		}
-
+		//verify that C is correct here - deleted for sake of execution time
 	}
 
 	//TODO: since submitting CUDA takes so long on HPC, probabaly want to write batch
