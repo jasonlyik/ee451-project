@@ -16,11 +16,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <cublas.h>
+#include <math.h>
 
 #define GRID_WIDTH 128
 #define BLOCK_WIDTH 16
 #define BLOCK_HEIGHT 32
+
+//TODO: possibly increase block width, decrease block height since there will be max 32 nonzeroes per col on avg
 
 typedef struct {
 	char column;
@@ -230,16 +232,52 @@ __device__ int binary_search(int *arr, int len, int target) {
 	return -1;
 }
 
-__global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int n) {
-	//TODO: write this
-	//get the block, thread col and thread row
+__global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_cols_per_block, int n) {
 	//figure out relevant portions of B.JC, B.CP, etc.
-	//setup shared memory --> while loop for each thread, once all threads break they can sync
-	//for loop for the columns that this will look at
-		//for loop for the nonzero elements that this thread will execute on
-			//do the multiplication, remember to atomicAdd for C
-	//note: threads don't have to wait for each other to sync, some can be on different columns than others no problem
+	int block_first = gridIdx.x * num_cols_per_block;
+	if(start > B.nzc) return; //more blocks than nzc
+	int block_last = block_first + num_cols_per_block - 1; //inclusive
+	if(block_last >= B.nzc) block_last = B.nzc - 1;
 
+	//TODO: setup shared memory --> while loop for each thread, once all threads break they can sync
+
+	//loop for the columns that this will look at
+	int x = block_first + threadIdx.x; // col index in B.JC this thread col is working on
+	while(x <= block_last) {
+		int j = B.JC[x];
+		int first = B.CP[x];
+		int last = B.CP[x+1];
+		int curr = first + threadIdx.y; // row index in B.IR this thread is working on
+		//loop for the nonzero elements that this thread will execute on
+		while(curr < last) {
+			//do the multiplication, remember to atomicAdd for C
+			int brow = B.IR[curr];
+			int bval = B.NUM[curr];
+
+			int apos = binary_search(A.JC, A.nzc, brow);
+			if(apos != -1) {
+				int acurr = A.CP[apos];
+				int alast = A.CP[apos+1];
+
+				int i, aval;
+				while(acurr != alast) { // iterate over elements in column brow of A
+					i = A.IR[acurr];
+					aval = A.NUM[acurr];
+
+					// C[i * n + j] += aval * bval;
+					atomicAdd(C + (i*n + j), aval * bval); // race conditions may occur within this thread row
+
+					acurr++;
+				}
+			}
+
+			curr += blockDim.y;
+		}
+		
+		x += blockDim.x; // next column is assigned round robin
+	}
+
+	//note: threads don't have to wait for each other to sync, some can be on different columns than others no problem
 }
 
 void parallel_multiply(int *C, int n, int nnz, char *Afile, char *Bfile, int Arseed, int Brseed) {
@@ -263,7 +301,10 @@ void parallel_multiply(int *C, int n, int nnz, char *Afile, char *Bfile, int Ars
 	dim3 dimGrid(GRID_WIDTH);
 	dim3 dimBlock(BLOCK_WIDTH, BLOCK_HEIGHT);
 
-	device_multiply<<<dimGrid, dimBlock>>>(A, B, C, n);
+	double nd = (double)B.nzc / (double)GRID_WIDTH;
+	int num_cols_per_block = (int) ceil(nd);
+
+	device_multiply<<<dimGrid, dimBlock>>>(A, B, C, num_cols_per_block, n);
 	cudaDeviceSynchronize(); // in order to access unified memory
 
 	//stop timer for computation
