@@ -6,8 +6,7 @@
  *
  * Serial multiplication of DCSC matrices.
  * 
- * Compile and move executable into graphs folder, 
- * run with arguments n and nnz for graphs that exist
+ * Run with executable in a graphs folder containing n_nnz_x graph
  *
  */ 
 
