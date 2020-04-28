@@ -22,7 +22,6 @@
 #define BLOCK_WIDTH 32
 #define BLOCK_HEIGHT 8
 
-//TODO: possibly increase block width, decrease block height since there will be max 8 nonzeroes per col on avg
 
 typedef struct {
 	char column;
@@ -47,7 +46,7 @@ typedef struct {
 	int nnz; // number of nonzeroes
 } dcs_matrix_t;
 
-//TODO: delete this
+
 void read_matrix(int **m, char *file, int seed) {
 	FILE *fp = fopen(file, "r");
 
@@ -65,7 +64,6 @@ void read_matrix(int **m, char *file, int seed) {
 	return;
 }
 
-//TODO: delete this
 void serial_multiply(int **C, int n, char *Afile, char *Bfile, int Arseed, int Brseed) {
 	//O(n^3) block multiplication from pa1
 	struct timespec start, stop;
@@ -377,14 +375,20 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
+	char verify = 1; // CHANGE FOR NO VERIFICATION
+
 	int n = atoi(argv[1]);
 	int nnz = atoi(argv[2]);
 	int num_iterations = 5;
 
-	int *C;
+	if(n > 2048) verify = 0; // override so serial compute doesn't take forever
+
+	int *C = (int *) malloc (sizeof(int)*n*n);
+	int *gpu_C;
+	cudaMalloc((void**)&gpu_C, sizeof(int)*n*n);
+
 	char Afile[20];
 	char Bfile[20];
-	cudaMallocManaged(&C, sizeof(int)*n*n);
 
 	//number of iterations of the program
 	for(int it = 0; it < num_iterations; it++) {
@@ -392,16 +396,18 @@ int main(int argc, char **argv) {
 		for(int i = 0; i < n*n; i++) {
 			C[i] = 0;
 		}
+		cudaMemcpy(gpu_C, C, sizeof(int)*n*n, cudaMemcpyHostToDevice);
 
 		sprintf(Afile, "%d_%d_%d", n, nnz, it);
 		sprintf(Bfile, "%d_%d_%d", n, nnz, (it+1) % num_iterations);
 
 		//execute multiplication
-		parallel_multiply(C, n, nnz, Afile, Bfile, 1, 1);
+		parallel_multiply(gpu_C, n, nnz, Afile, Bfile, 1, 1);
 
 		//verify that C is correct here
-		//TODO: get rid of this
-		if(it == 0) {
+		if(it == 0 && verify) {
+			cudaMemcpy(C, gpu_C, sizeof(int)*n*n, cudaMemcpyDeviceToHost);
+
 			int **C2 = (int **) malloc (sizeof(int *)*n);
 			for (int i=0; i<n; i++) {
 				C2[i] = (int *) malloc(sizeof(int)*n);
@@ -441,11 +447,8 @@ int main(int argc, char **argv) {
 
 	}
 
-	//TODO: since submitting CUDA takes so long on HPC, probabaly want to write batch
-	// or run all of the tests in the same executable sequence, make changes after the
-	// algorithm is shown to work
-	
-	cudaFree(C);
+	cudaFree(gpu_C);
+	free(C);
 
 	return 0;
 }
