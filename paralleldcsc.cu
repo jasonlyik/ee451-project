@@ -249,7 +249,7 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 	int buf;
 
 	buf = t_idx;
-	while(t_idx < a_nzc) {
+	while(buf < a_nzc) {
 		a_jc[buf] = A.JC[buf];
 		buf += tot_threads;
 	}
