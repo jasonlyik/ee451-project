@@ -269,8 +269,8 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 	int start = B.CP[block_first];
 	int end = B.CP[block_last];
 	int len = end - start;
-	__shared__ b_ir[len];
-	__shared__ b_num[len];
+	__shared__ int b_ir[len];
+	__shared__ int b_num[len];
 	buf = start + t_idx; // index of B.IR / B.NUM
 	while(buf < end) {
 		b_ir[buf - start] = B.IR[buf];
