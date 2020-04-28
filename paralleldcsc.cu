@@ -367,7 +367,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
-	char verify = 1; // CHANGE FOR NO VERIFICATION
+	char verify = 0; // CHANGE FOR NO VERIFICATION
 
 	int n = atoi(argv[1]);
 	int nnz = atoi(argv[2]);
