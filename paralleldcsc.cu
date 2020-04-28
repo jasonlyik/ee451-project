@@ -276,7 +276,7 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 
 	//loop for the columns that this will look at
 	int x = threadIdx.x; // index in B.JC this thread col is working on
-	while(x < block_last) {
+	while(x < cols) {
 		j = b_jc[x];
 		first = b_cp[x];
 		last = b_cp[x+1];
