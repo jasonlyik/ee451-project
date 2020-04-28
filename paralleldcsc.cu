@@ -244,7 +244,7 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 	// int *b_cp = &b_jc[num_cols_per_block]; // length num_cols_per_block +1
 
 	// copy A.JC into shared memory since always doing binary search on it
-	int t_idx = threadIdx.x * blockDim.x + threadIdx.y;
+	int t_idx = threadIdx.x + threadIdx.y * blockDim.x;
 	int tot_threads = blockDim.x * blockDim.y;
 	int buf;
 
