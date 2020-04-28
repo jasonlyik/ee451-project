@@ -238,12 +238,16 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 
 	int a_nzc = A.nzc;
 
+	extern __shared__ int s[];
+	int *a_jc = s; // length a_nzc
+	int *b_jc = &a_jc[a_nzc]; // length num_cols_per_block
+	int *b_cp = &b_jc[num_cols_per_block]; // length num_cols_per_block +1
+
 	// copy A.JC into shared memory since always doing binary search on it
 	int t_idx = threadIdx.x * blockDim.x + threadIdx.y;
 	int tot_threads = blockDim.x * blockDim.y;
 	int buf;
 
-	__shared__ int a_jc[a_nzc];
 	buf = t_idx;
 	while(t_idx < a_nzc) {
 		a_jc[buf] = A.JC[buf];
@@ -252,8 +256,6 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 
 	// copy relevant portions of B.JC and B.CP into shared memory
 	int cols = block_last - block_first;
-	__shared__ int b_jc[cols];
-	__shared__ int b_cp[cols + 1];
 	buf = t_idx; // index of b_jc
 	while(buf < cols) {
 		b_jc[buf] = B.JC[block_first + buf];
@@ -262,19 +264,6 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 	buf = t_idx; // index of b_cp
 	while(buf <= cols) {
 		b_cp[buf] = B.CP[block_first + buf];
-		buf += tot_threads;
-	}
-
-	// copy relevant portions of B.IR and B.NUM into shared memory
-	int start = B.CP[block_first];
-	int end = B.CP[block_last];
-	int len = end - start;
-	__shared__ int b_ir[len];
-	__shared__ int b_num[len];
-	buf = start + t_idx; // index of B.IR / B.NUM
-	while(buf < end) {
-		b_ir[buf - start] = B.IR[buf];
-		b_num[buf - start] = B.NUM[buf];
 		buf += tot_threads;
 	}
 
@@ -295,8 +284,8 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 		//loop for the nonzero elements that this thread will execute on
 		while(curr < last) {
 			//do the multiplication, remember to atomicAdd for C
-			brow = b_ir[curr - start];
-			bval = b_num[curr - start];
+			brow = B.IR[curr];
+			bval = B.NUM[curr];
 
 			apos = binary_search(a_jc, a_nzc, brow);
 			if(apos != -1) {
@@ -347,7 +336,10 @@ void parallel_multiply(int *C, int n, int nnz, char *Afile, char *Bfile, int Ars
 	double nd = (double)B.nzc / (double)GRID_WIDTH;
 	int num_cols_per_block = (int) ceil(nd);
 
-	device_multiply<<<dimGrid, dimBlock>>>(A, B, C, num_cols_per_block, n);
+	//dynamic allocation of shared memory
+	//holds A.JC, B.JC, B.CP
+	unsigned shared_space = sizeof(int) * (A.nzc + num_cols_per_block + num_cols_per_block + 1);
+	device_multiply<<<dimGrid, dimBlock, shared_space>>>(A, B, C, num_cols_per_block, n);
 	cudaDeviceSynchronize(); // in order to access unified memory
 
 	//stop timer for computation
