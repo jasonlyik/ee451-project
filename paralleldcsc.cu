@@ -338,7 +338,7 @@ void parallel_multiply(int *C, int n, int nnz, char *Afile, char *Bfile, int Ars
 
 	//dynamic allocation of shared memory
 	//holds A.JC, B.JC, B.CP
-	unsigned shared_space = sizeof(int) * (A.nzc);
+	unsigned shared_space = sizeof(int) * (A.nzc + num_cols_per_block + num_cols_per_block + 1);
 	device_multiply<<<dimGrid, dimBlock, shared_space>>>(A, B, C, num_cols_per_block, n);
 	cudaDeviceSynchronize(); // in order to access unified memory
 
