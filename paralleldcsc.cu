@@ -240,8 +240,8 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 
 	extern __shared__ int s[];
 	int *a_jc = s; // length a_nzc
-	int *b_jc = &a_jc[a_nzc]; // length num_cols_per_block
-	int *b_cp = &b_jc[num_cols_per_block]; // length num_cols_per_block +1
+	// int *b_jc = &a_jc[a_nzc]; // length num_cols_per_block
+	// int *b_cp = &b_jc[num_cols_per_block]; // length num_cols_per_block +1
 
 	// copy A.JC into shared memory since always doing binary search on it
 	int t_idx = threadIdx.x * blockDim.x + threadIdx.y;
@@ -254,18 +254,18 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 		buf += tot_threads;
 	}
 
-	// copy relevant portions of B.JC and B.CP into shared memory
-	int cols = block_last - block_first;
-	buf = t_idx; // index of b_jc
-	while(buf < cols) {
-		b_jc[buf] = B.JC[block_first + buf];
-		buf += tot_threads;
-	}
-	buf = t_idx; // index of b_cp
-	while(buf <= cols) {
-		b_cp[buf] = B.CP[block_first + buf];
-		buf += tot_threads;
-	}
+	// // copy relevant portions of B.JC and B.CP into shared memory
+	// int cols = block_last - block_first;
+	// buf = t_idx; // index of b_jc
+	// while(buf < cols) {
+	// 	b_jc[buf] = B.JC[block_first + buf];
+	// 	buf += tot_threads;
+	// }
+	// buf = t_idx; // index of b_cp
+	// while(buf <= cols) {
+	// 	b_cp[buf] = B.CP[block_first + buf];
+	// 	buf += tot_threads;
+	// }
 
 	__syncthreads();
 
@@ -275,11 +275,11 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 	int acurr, alast, i, aval;
 
 	//loop for the columns that this will look at
-	int x = threadIdx.x; // index in B.JC this thread col is working on
-	while(x < cols) {
-		j = b_jc[x];
-		first = b_cp[x];
-		last = b_cp[x+1];
+	int x = block_first + threadIdx.x; // index in B.JC this thread col is working on
+	while(x < block_last) {
+		j = B.JC[x];
+		first = B.CP[x];
+		last = B.CP[x+1];
 		curr = first + threadIdx.y; // row index in B.IR this thread is working on
 		//loop for the nonzero elements that this thread will execute on
 		while(curr < last) {
@@ -338,7 +338,7 @@ void parallel_multiply(int *C, int n, int nnz, char *Afile, char *Bfile, int Ars
 
 	//dynamic allocation of shared memory
 	//holds A.JC, B.JC, B.CP
-	unsigned shared_space = sizeof(int) * (A.nzc + num_cols_per_block + num_cols_per_block + 1);
+	unsigned shared_space = sizeof(int) * (A.nzc);
 	device_multiply<<<dimGrid, dimBlock, shared_space>>>(A, B, C, num_cols_per_block, n);
 	cudaDeviceSynchronize(); // in order to access unified memory
 
