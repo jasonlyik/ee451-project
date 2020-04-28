@@ -19,10 +19,10 @@
 #include <math.h>
 
 #define GRID_WIDTH 128
-#define BLOCK_WIDTH 16
-#define BLOCK_HEIGHT 32
+#define BLOCK_WIDTH 32
+#define BLOCK_HEIGHT 8
 
-//TODO: possibly increase block width, decrease block height since there will be max 32 nonzeroes per col on avg
+//TODO: possibly increase block width, decrease block height since there will be max 8 nonzeroes per col on avg
 
 typedef struct {
 	char column;
@@ -238,27 +238,73 @@ __global__ void device_multiply(dcs_matrix_t A, dcs_matrix_t B, int *C, int num_
 	int block_last = block_first + num_cols_per_block; //exclusive
 	if(block_last > B.nzc) block_last = B.nzc;
 
-	//TODO: setup shared memory --> while loop for each thread, once all threads break they can sync
+	int a_nzc = A.nzc;
+
+	// copy A.JC into shared memory since always doing binary search on it
+	int t_idx = threadIdx.x * dimBlock.x + threadIdx.y;
+	int tot_threads = dimBlock.x * dimBlock.y;
+	int buf;
+
+	__shared__ int a_jc[a_nzc];
+	buf = t_idx;
+	while(t_idx < a_nzc) {
+		a_jc[buf] = A.JC[buf];
+		buf += tot_threads;
+	}
+
+	// copy relevant portions of B.JC and B.CP into shared memory
+	int cols = block_last - block_first;
+	__shared__ int b_jc[cols];
+	__shared__ int b_cp[cols + 1];
+	buf = t_idx; // index of b_jc
+	while(buf < cols) {
+		b_jc[buf] = B.JC[block_first + buf];
+		buf += tot_threads;
+	}
+	buf = t_idx; // index of b_cp
+	while(buf <= cols) {
+		b_cp[buf] = B.CP[block_first + buf];
+		buf += tot_threads;
+	}
+
+	// copy relevant portions of B.IR and B.NUM into shared memory
+	int start = B.CP[block_first];
+	int end = B.CP[block_last];
+	int len = end - start;
+	__shared__ b_ir[len];
+	__shared__ b_num[len];
+	buf = start + t_idx; // index of B.IR / B.NUM
+	while(buf < end) {
+		b_ir[buf - start] = B.IR[buf];
+		b_num[buf - start] = B.NUM[buf];
+		buf += tot_threads;
+	}
+
+	__syncthreads();
+
+	
+	int j, first, last, curr;
+	int brow, bval, apos;
+	int acurr, alast, i, aval;
 
 	//loop for the columns that this will look at
-	int x = block_first + threadIdx.x; // index in B.JC this thread col is working on
+	int x = threadIdx.x; // index in B.JC this thread col is working on
 	while(x < block_last) {
-		int j = B.JC[x];
-		int first = B.CP[x];
-		int last = B.CP[x+1];
-		int curr = first + threadIdx.y; // row index in B.IR this thread is working on
+		j = b_jc[x];
+		first = b_cp[x];
+		last = b_cp[x+1];
+		curr = first + threadIdx.y; // row index in B.IR this thread is working on
 		//loop for the nonzero elements that this thread will execute on
 		while(curr < last) {
 			//do the multiplication, remember to atomicAdd for C
-			int brow = B.IR[curr];
-			int bval = B.NUM[curr];
+			brow = b_ir[curr - start];
+			bval = b_num[curr - start];
 
-			int apos = binary_search(A.JC, A.nzc, brow);
+			apos = binary_search(a_jc, a_nzc, brow);
 			if(apos != -1) {
-				int acurr = A.CP[apos];
-				int alast = A.CP[apos+1];
+				acurr = A.CP[apos];
+				alast = A.CP[apos+1];
 
-				int i, aval;
 				while(acurr != alast) { // iterate over elements in column brow of A
 					i = A.IR[acurr];
 					aval = A.NUM[acurr];
